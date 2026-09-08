@@ -35,14 +35,14 @@ public class Application {
       String text = reader.read();
       List<Ship> ships = parser.parse(text);
       executor = Executors.newFixedThreadPool(ships.size());
-      List<Future<String>> futures = new ArrayList<>();
+      List<Future<Integer>> futures = new ArrayList<>();
 
       for (Ship ship : ships) {
           futures.add(executor.submit(ship));
       }
         
-      for (Future<String> future : futures) {
-        Log.info(future.get()); 
+      for (Future<Integer> future : futures) {
+        Log.info("Ship " + future.get() + " processed succesfully"); 
       }
     } catch (Exception e) {
       Log.error("File reading exception: " + e);

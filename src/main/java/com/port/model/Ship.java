@@ -10,7 +10,7 @@ import com.port.state.ShipState;
 import com.port.state.impl.CompletedState;
 import com.port.state.impl.WaitingState;
 
-public class Ship implements Callable<String> {
+public class Ship implements Callable<Integer> {
   private static final Logger Log = LogManager.getLogger();
 
   private final int shipId;
@@ -33,7 +33,7 @@ public class Ship implements Callable<String> {
     this.needsLoad = needsLoad;
   }
   @Override
-  public String call() throws Exception {
+  public Integer call() throws Exception {
     Port port = Port.getInstance();
     Log.info("Ship {} near the port.", shipId);
 
@@ -54,7 +54,7 @@ public class Ship implements Callable<String> {
     } catch (InterruptedException e) {
       throw new ProjectException("Ship " + shipId + " was interrupted during processing.",e);
     }
-    return "Ship " + shipId + " processed succesfully";  
+    return shipId;  
   }
 
   public int getCountsOfCurrentContainers() {return currentContainers.get(); }
