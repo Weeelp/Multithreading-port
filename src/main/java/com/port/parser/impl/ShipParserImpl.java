@@ -22,7 +22,7 @@ public class ShipParserImpl implements ShipParser {
       boolean needsLoad = Boolean.parseBoolean(parts[4].trim());
                 
       ships.add(new Ship(id, currentCargo, capacity, needsUnload, needsLoad));
-    }// TODO ship inf validation
+    }
     return ships;
   }
   

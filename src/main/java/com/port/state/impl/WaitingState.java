@@ -26,6 +26,6 @@ public class WaitingState implements ShipState {
   }
 
   @Override
-  public void processAction(Ship ship, Port port) throws InterruptedException {}
+  public void processAction(Ship ship, Port port) {}
   
 }

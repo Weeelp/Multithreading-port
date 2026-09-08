@@ -26,7 +26,7 @@ public class LoadingState implements ShipState{
     int containersToLoad = ship.getCountsOfCurrentContainers();
 
     if(containersToLoad > 0) {
-      int loadCount = port.getContainers(containersToLoad);
+      int loadCount = port.loadContainers(containersToLoad);
       ship.setCountOfCurrentContainers(loadCount);
 
       TimeUnit.SECONDS.sleep(3);

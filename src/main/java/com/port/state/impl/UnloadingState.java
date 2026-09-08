@@ -31,7 +31,7 @@ public class UnloadingState implements ShipState {
     int containersToUnload = ship.getCountsOfCurrentContainers();
 
     if(containersToUnload > 0) {
-      int unloadedCount = port.addContainers(containersToUnload);
+      int unloadedCount = port.unloadContainers(containersToUnload);
       ship.setCountOfCurrentContainers(-unloadedCount);
 
       TimeUnit.SECONDS.sleep(3);

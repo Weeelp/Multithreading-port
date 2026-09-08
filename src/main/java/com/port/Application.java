@@ -50,7 +50,6 @@ public class Application {
       if(executor != null) {
         executor.shutdown();
         Log.info("Пул потоков успешно остановлен. Работа порта завершена.");
-        // TODO intelegent shutdown
       }
     }
   }

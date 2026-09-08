@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.port.exception.ProjectException;
 import com.port.state.ShipState;
 import com.port.state.impl.CompletedState;
 import com.port.state.impl.WaitingState;
@@ -31,13 +32,14 @@ public class Ship implements Callable<String> {
     this.needsUnload = needsUnload;
     this.needsLoad = needsLoad;
   }
-
   @Override
   public String call() throws Exception {
     Port port = Port.getInstance();
     Log.info("Ship {} near the port.", shipId);
-    port.getBerths().acquire();
+
     try {
+      port.lockBerth();
+      try{
       Log.info("Ship {} near the berth.", shipId);
 
       while(!(this.state instanceof CompletedState)) {
@@ -47,7 +49,11 @@ public class Ship implements Callable<String> {
       }
     } finally {
       Log.info("Ship {} leave the berth.", shipId);
-      port.getBerths().release();
+      port.unlockBerth();
+    }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ProjectException("Ship " + shipId + " was interrupted during processing.",e);
     }
     return "Ship " + shipId + " processed succesfully";  
   }

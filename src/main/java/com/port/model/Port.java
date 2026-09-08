@@ -1,19 +1,23 @@
 package com.port.model;
 
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Port {
   private static final AtomicReference<Port> instance = new AtomicReference<>();
-  
-  private final Semaphore berths;
-  private final AtomicInteger warehouseContainers;
+
+  private final Lock lock = new ReentrantLock(true);
+  private final Condition berthAvailable = lock.newCondition();
+
+  private int berths;
+  private int warehouseContainers;
   private final int warehouseCapacity;
 
   private Port(int berths, int warehouseContainers, int warehouseCapacity) {
-    this.berths = new Semaphore(berths, true);
-    this.warehouseContainers = new AtomicInteger(warehouseContainers);
+    this.berths = berths;
+    this.warehouseContainers = warehouseContainers;
     this.warehouseCapacity = warehouseCapacity;
   }
 
@@ -36,49 +40,65 @@ public class Port {
     return port;
   }
 
-  public Semaphore getBerths() {
-    return berths;
+   public void lockBerth() throws InterruptedException {
+    lock.lock();
+    try {
+      while (berths <= 0) {
+        berthAvailable.await();
+      }
+      berths--;
+    } finally {
+      lock.unlock();
+    }
   }
 
-  public AtomicInteger getWarehouseContainers() {
-    return warehouseContainers;
+  public void unlockBerth() {
+    lock.lock();
+    try {
+      berths++;
+      berthAvailable.signal();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  public int getWarehouseContainers() {
+    lock.lock();
+    try{
+      return warehouseContainers;
+    } finally { lock.unlock(); }
   }
 
   public int getWarehouseCapacity() {
     return warehouseCapacity;
   }
 
-  public int addContainers(int containersToUnload) {
-    if (containersToUnload <= 0) { return 0; }
+  public int unloadContainers(int count) {
+    if (count <= 0) { return 0; };
 
-    while (true) {
-      int current = warehouseContainers.get();
-      int freeSpace = warehouseCapacity - current;
+    lock.lock();
+    try {
+      int freeSpace = warehouseCapacity - warehouseContainers;
+      if (freeSpace <= 0) { return 0; }
 
-      if (freeSpace <= 0) { return containersToUnload; }
-
-      int canTake = Math.min(containersToUnload, freeSpace);
-      int nextValue = current + canTake;
-
-      if (warehouseContainers.compareAndSet(current, nextValue)) {
-        return canTake; 
-      }
-    }
+      int canUnload = Math.min(count, freeSpace);
+      warehouseContainers += canUnload;
+      
+      return canUnload;
+    } finally { lock.unlock(); }
   }
 
-  public int getContainers(int containersToLoad) {
-    if (containersToLoad <= 0) { return 0; }
+  public int loadContainers(int count) {
+    if (count <= 0) { return 0; };
 
-    while (true) {
-      int current = warehouseContainers.get();
+    lock.lock();
+    try {
+      if (warehouseContainers <= 0) { return 0; }
 
-      if (current <= 0) { return 0; }
-      int canLoad = Math.min(containersToLoad, current);
-      int nextValue = current - canLoad;
-
-      if (warehouseContainers.compareAndSet(current, nextValue)) {
-        return canLoad; 
-      }
-    }
+      int canLoad = Math.min(count, warehouseContainers);
+      warehouseContainers -= canLoad;
+      
+      return canLoad;
+    } finally { lock.unlock(); }
   }
 }
