@@ -52,7 +52,6 @@ public class Ship implements Callable<String> {
       port.unlockBerth();
     }
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
       throw new ProjectException("Ship " + shipId + " was interrupted during processing.",e);
     }
     return "Ship " + shipId + " processed succesfully";  
